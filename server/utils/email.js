@@ -658,3 +658,387 @@ export const sendOrderConfirmationEmail = async (
 
   await sendEmailViaBrevo(email, 'Your SnapCart order is confirmed', html);
 };
+
+export const sendDeliveryConfirmationEmail = async (
+  email,
+  name,
+  order,
+  products
+) => {
+  const transactionId = order.paymentInfo.transactionId;
+
+  const formattedDeliveryDate = new Date().toLocaleDateString(
+    "en-IN",
+    {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }
+  );
+
+  const productRows = products
+    .map(
+      (product) => `
+        <tr>
+          <td style="
+            padding:18px 0;
+            border-bottom:1px solid #e5e7eb;
+          ">
+
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+
+                <!-- Product Image -->
+                <td width="95" valign="top">
+                  <img
+                    src="${product.image}"
+                    alt="${product.name}"
+                    width="82"
+                    style="
+                      display:block;
+                      border-radius:12px;
+                      border:1px solid #e5e7eb;
+                    "
+                  />
+                </td>
+
+                <!-- Product Details -->
+                <td valign="top" style="padding-left:14px;">
+
+                  <p style="
+                    margin:0;
+                    font-size:16px;
+                    font-weight:700;
+                    color:#111827;
+                    line-height:24px;
+                  ">
+                    ${product.name}
+                  </p>
+
+                  <p style="
+                    margin:8px 0 0 0;
+                    font-size:14px;
+                    color:#6b7280;
+                    line-height:22px;
+                  ">
+                    ${product.description}
+                  </p>
+
+                  <table
+                    width="100%"
+                    cellpadding="0"
+                    cellspacing="0"
+                    style="margin-top:14px;"
+                  >
+                    <tr>
+
+                      <td style="
+                        font-size:14px;
+                        color:#374151;
+                      ">
+                        Qty:
+                        <strong>${product.quantity}</strong>
+                      </td>
+
+                      <td align="right" style="
+                        font-size:17px;
+                        font-weight:700;
+                        color:#111827;
+                      ">
+                        ₹${(product.price || 0).toFixed(2)}
+                      </td>
+
+                    </tr>
+                  </table>
+
+                </td>
+
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      `
+    )
+    .join("");
+
+  const html = `
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+</head>
+
+<body style="
+  margin:0;
+  padding:0;
+  background:#f3f4f6;
+  font-family:Arial,sans-serif;
+">
+
+  <table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    style="padding:40px 20px;"
+  >
+    <tr>
+      <td align="center">
+
+        <!-- Main Container -->
+        <table
+          width="600"
+          cellpadding="0"
+          cellspacing="0"
+          style="
+            width:100%;
+            max-width:600px;
+            background:#ffffff;
+            border-radius:20px;
+            overflow:hidden;
+          "
+        >
+
+          <!-- Header -->
+          <tr>
+            <td
+              align="center"
+              style="
+                background:#111827;
+                padding:35px 20px;
+              "
+            >
+              <img
+                src="${LOGO_URL}"
+                alt="SnapCart"
+                width="200"
+                style="
+                  display:block;
+                  max-width:200px;
+                  width:100%;
+                "
+              />
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="padding:40px 35px;">
+
+              <!-- Title -->
+              <h1 style="
+                margin:0 0 10px 0;
+                color:#16a34a;
+                font-size:32px;
+                font-weight:700;
+                text-align:center;
+              ">
+                ✓ Delivered!
+              </h1>
+
+              <p style="
+                text-align:center;
+                margin:0 0 28px 0;
+                color:#6b7280;
+                font-size:16px;
+              ">
+                Your order has been successfully delivered
+              </p>
+
+              <!-- Order Info Box -->
+              <table
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                style="
+                  background:#f9fafb;
+                  border-radius:14px;
+                  margin-bottom:28px;
+                "
+              >
+                <tr>
+                  <td style="padding:24px;">
+
+                    <p style="
+                      margin:0 0 16px 0;
+                      color:#111827;
+                      font-size:15px;
+                      font-weight:600;
+                    ">
+                      Hi ${name},
+                    </p>
+
+                    <p style="
+                      margin:0 0 20px 0;
+                      color:#4b5563;
+                      font-size:15px;
+                      line-height:26px;
+                    ">
+                      Great news! Your order has been delivered to your address on
+                      <strong>${formattedDeliveryDate}</strong>.
+                    </p>
+
+                    <table
+                      width="100%"
+                      cellpadding="0"
+                      cellspacing="0"
+                      style="margin-top:16px;"
+                    >
+                      <tr>
+                        <td style="
+                          font-size:13px;
+                          color:#6b7280;
+                          padding-bottom:12px;
+                        ">
+                          <strong>Order ID:</strong>
+                        </td>
+                        <td
+                          align="right"
+                          style="
+                            font-size:13px;
+                            color:#111827;
+                            font-weight:600;
+                            padding-bottom:12px;
+                          "
+                        >
+                          #${order._id.toString().slice(-8).toUpperCase()}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="
+                          font-size:13px;
+                          color:#6b7280;
+                          padding-bottom:12px;
+                        ">
+                          <strong>Transaction ID:</strong>
+                        </td>
+                        <td
+                          align="right"
+                          style="
+                            font-size:13px;
+                            color:#111827;
+                            font-weight:600;
+                            padding-bottom:12px;
+                          "
+                        >
+                          ${transactionId}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="
+                          font-size:13px;
+                          color:#6b7280;
+                        ">
+                          <strong>Total Amount:</strong>
+                        </td>
+                        <td
+                          align="right"
+                          style="
+                            font-size:16px;
+                            color:#111827;
+                            font-weight:700;
+                          "
+                        >
+                          ₹${order.totalPrice.toFixed(2)}
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Items Section -->
+              <p style="
+                margin:32px 0 16px 0;
+                color:#111827;
+                font-size:16px;
+                font-weight:700;
+              ">
+                Order Items
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                ${productRows}
+              </table>
+
+              <!-- Buttons -->
+              <table
+                cellpadding="0"
+                cellspacing="0"
+                width="100%"
+                style="margin-top:32px;"
+              >
+                <tr>
+                  <td align="center">
+                    <table
+                      cellpadding="0"
+                      cellspacing="0"
+                      style="margin-bottom:14px;"
+                    >
+                      <tr>
+                        <td
+                          align="center"
+                          bgcolor="#2563eb"
+                          style="border-radius:14px;"
+                        >
+                          <a
+                            href="https://snapcart-web.netlify.app/myOrders"
+                            style="
+                              display:inline-block;
+                              padding:14px 28px;
+                              color:#ffffff;
+                              text-decoration:none;
+                              font-size:15px;
+                              font-weight:600;
+                            "
+                          >
+                            View My Orders
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer -->
+              <p style="
+                margin-top:36px;
+                color:#4b5563;
+                font-size:15px;
+                line-height:26px;
+              ">
+                If you have any questions, simply reply to this email.
+              </p>
+
+              <p style="
+                margin-top:28px;
+                color:#111827;
+                font-size:15px;
+              ">
+                Thanks,<br />
+                <strong>SnapCart Team</strong>
+              </p>
+
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+`;
+
+  await sendEmailViaBrevo(email, 'Your order has been delivered! 🎉', html);
+};
