@@ -11,7 +11,7 @@ const getBaseURL = () => {
     return envURL;
   }
   
-  const defaultURL = "http://localhost:3000/api";
+  const defaultURL = "https://snapcart-clj3.onrender.com/api";
   console.log("Using default URL:", defaultURL);
   return defaultURL;
 };
