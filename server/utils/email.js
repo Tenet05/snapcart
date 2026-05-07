@@ -11,6 +11,14 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("EMAIL CONFIG ERROR:", error);
+  } else {
+    console.log("Email server is ready");
+  }
+});
+
 const LOGO_URL = "https://res.cloudinary.com/dipxchsu3/image/upload/v1778124602/Full-logo_a4lbgt.jpg";
 
 export const sendOTP = async (email, otp) => {
@@ -139,7 +147,13 @@ export const sendOTP = async (email, otp) => {
     `,
   };
 
+  try {
   await transporter.sendMail(mailOptions);
+  console.log("OTP email sent successfully");
+} catch (error) {
+  console.error("SEND OTP ERROR:", error);
+  throw error;
+}
 };
 
 export const sendWelcomeEmail = async (email, name) => {
