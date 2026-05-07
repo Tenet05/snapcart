@@ -1,36 +1,62 @@
-import nodemailer from 'nodemailer';
+import axios from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("EMAIL CONFIG ERROR:", error);
-  } else {
-    console.log("Email server is ready");
-  }
-});
-
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const BREVO_API_KEY = process.env.EMAIL_PASS; // Brevo API key
+const SENDER_EMAIL = process.env.EMAIL_USER; // Verified sender email in Brevo
 const LOGO_URL = "https://res.cloudinary.com/dipxchsu3/image/upload/v1778124602/Full-logo_a4lbgt.jpg";
 
-export const sendOTP = async (email, otp) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Your OTP for SnapCart Signup",
+// Test connection on startup
+const testBrevoConnection = async () => {
+  try {
+    // Make a simple request to verify API key works
+    await axios.get('https://api.brevo.com/v3/account', {
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+    console.log("✅ Brevo email service is ready");
+  } catch (error) {
+    console.error("⚠️  Brevo connection warning:", error.response?.data?.message || error.message);
+    // Don't block server startup if Brevo is unavailable
+  }
+};
 
-    html: `
+// Test connection on startup (non-blocking)
+testBrevoConnection();
+
+const sendEmailViaBrevo = async (to, subject, html) => {
+  try {
+    const response = await axios.post(BREVO_API_URL, {
+      sender: {
+        name: "SnapCart",
+        email: SENDER_EMAIL
+      },
+      to: [{
+        email: to
+      }],
+      subject: subject,
+      htmlContent: html
+    }, {
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log("✅ Email sent successfully:", response.data.messageId);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Failed to send email:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const sendOTP = async (email, otp) => {
+  const html = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -147,25 +173,18 @@ export const sendOTP = async (email, otp) => {
 
       </body>
       </html>
-    `,
-  };
+    `;
 
   try {
-  await transporter.sendMail(mailOptions);
-  console.log("OTP email sent successfully");
-} catch (error) {
-  console.error("SEND OTP ERROR:", error);
-  throw error;
-}
+    await sendEmailViaBrevo(email, "Your OTP for SnapCart Signup", html);
+  } catch (error) {
+    console.error("SEND OTP ERROR:", error);
+    throw error;
+  }
 };
 
 export const sendWelcomeEmail = async (email, name) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Welcome to SnapCart!",
-
-    html: `
+  const html = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -285,10 +304,9 @@ export const sendWelcomeEmail = async (email, name) => {
 
       </body>
       </html>
-    `,
-  };
+    `;
 
-  await transporter.sendMail(mailOptions);
+  await sendEmailViaBrevo(email, "Welcome to SnapCart!", html);
 };
 
 export const sendOrderConfirmationEmail = async (
@@ -638,13 +656,5 @@ export const sendOrderConfirmationEmail = async (
 </html>
 `;
 
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Your SnapCart order is confirmed',
-        html,
-    };
-
-    await transporter.sendMail(mailOptions);
+  await sendEmailViaBrevo(email, 'Your SnapCart order is confirmed', html);
 };

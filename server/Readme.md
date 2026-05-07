@@ -34,13 +34,14 @@ JWT_SECRET="your_jwt_secret"
 CLOUDINARY_CLOUD_NAME="your_cloudinary_cloud_name"
 CLOUDINARY_API_KEY="your_cloudinary_api_key"
 CLOUDINARY_API_SECRET="your_cloudinary_api_secret"
-EMAIL_USER="your_brevo_sender_email@example.com"
-EMAIL_PASS="your_brevo_smtp_api_key"
+EMAIL_USER="your_brevo_verified_sender_email@example.com"
+EMAIL_PASS="xsmtpsib-your_brevo_api_key_here"
 ```
 
-**Note:** For Brevo Email:
-- `EMAIL_USER`: Your registered Brevo sender email
-- `EMAIL_PASS`: Your Brevo SMTP API key (not password)
+**Note:** For Brevo Email (uses REST API, not SMTP):
+- `EMAIL_USER`: Your verified sender email in Brevo
+- `EMAIL_PASS`: Your Brevo API key (from Account Settings > SMTP & API > API Keys)
+- Why API? SMTP is blocked on free hosting tiers like Render. REST API works everywhere!
 ### **4. Start the Server**
 ```bash
 npm start

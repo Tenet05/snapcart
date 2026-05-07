@@ -176,20 +176,24 @@ The application uses JWT (JSON Web Tokens) for authentication and role-based acc
 
 ## � Email Configuration
 
-SnapCart uses **Brevo (formerly Sendinblue)** for email delivery:
+SnapCart uses **Brevo (formerly Sendinblue)** REST API for email delivery (not SMTP, as SMTP is blocked on free hosting tiers like Render):
 
 ### Setup Brevo
 1. Create a Brevo account at [https://www.brevo.com](https://www.brevo.com)
-2. Get your SMTP credentials:
-   - **SMTP Host**: smtp-relay.brevo.com
-   - **SMTP Port**: 587
-   - **Email User**: Your verified sender email in Brevo
-   - **Email Pass**: Your Brevo SMTP API key (found in Account Settings > SMTP & API)
+2. Get your API credentials:
+   - Go to **Account Settings** → **SMTP & API** → **API Keys**
+   - Copy your API key (starts with `xsmtpsib-`)
+   - Verify a sender email address
 3. Configure in `.env`:
    ```
    EMAIL_USER=your_verified_sender_email@example.com
-   EMAIL_PASS=your_brevo_smtp_api_key
+   EMAIL_PASS=xsmtpsib-your_brevo_api_key_here
    ```
+
+### Why REST API instead of SMTP?
+- **SMTP is blocked** on free hosting tiers (Render, Railway, etc.) for security
+- **REST API works everywhere** and is more reliable
+- **No additional dependencies** beyond axios (already used in the app)
 
 ### Features
 - User signup OTP verification
