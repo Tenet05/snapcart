@@ -249,7 +249,7 @@ export const sendWelcomeEmail = async (email, name) => {
                           border-radius:14px;
                         ">
                           <a
-                            href="https://snapcart.vercel.app"
+                            href="https://snapcart-web.netlify.app"
                             style="
                               display:inline-block;
                               padding:14px 28px;
@@ -590,7 +590,7 @@ export const sendOrderConfirmationEmail = async (
                     style="border-radius:14px;"
                   >
                     <a
-                      href="https://snapcart.vercel.app/myOrders"
+                      href="https://snapcart-web.netlify.app/myOrders"
                       style="
                         display:inline-block;
                         padding:14px 28px;

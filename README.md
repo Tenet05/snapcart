@@ -100,17 +100,21 @@ A full-stack e-commerce application built with React.js frontend and Node.js/Exp
    Create `.env` file in the server directory:
    ```env
    PORT=3000
-   MONGODB_URI=your_mongodb_connection_string
+   MONGO_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret_key
    CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
    CLOUDINARY_API_KEY=your_cloudinary_api_key
    CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+   EMAIL_USER=your_brevo_sender_email@example.com
+   EMAIL_PASS=your_brevo_smtp_api_key
    ```
 
    Create `.env` file in the frontend directory:
    ```env
    VITE_API_URL=http://localhost:3000/api
    ```
+
+   **Note:** For production, update `VITE_API_URL` to your deployed backend URL.
 
 ### Running the Application
 
@@ -170,23 +174,83 @@ The application uses JWT (JSON Web Tokens) for authentication and role-based acc
 - **Product**: Product details and inventory
 - **Order**: Order information and status
 
+## � Email Configuration
+
+SnapCart uses **Brevo (formerly Sendinblue)** for email delivery:
+
+### Setup Brevo
+1. Create a Brevo account at [https://www.brevo.com](https://www.brevo.com)
+2. Get your SMTP credentials:
+   - **SMTP Host**: smtp-relay.brevo.com
+   - **SMTP Port**: 587
+   - **Email User**: Your verified sender email in Brevo
+   - **Email Pass**: Your Brevo SMTP API key (found in Account Settings > SMTP & API)
+3. Configure in `.env`:
+   ```
+   EMAIL_USER=your_verified_sender_email@example.com
+   EMAIL_PASS=your_brevo_smtp_api_key
+   ```
+
+### Features
+- User signup OTP verification
+- Welcome email on account creation
+- Order confirmation emails with order details
+
 ## 🚀 Deployment
 
-### Frontend Deployment
+### ✅ Current Deployment Status
+- **Frontend**: https://snapcart-web.netlify.app (Netlify)
+- **Backend**: https://snapcart-clj3.onrender.com (Render Free Tier)
+
+### Frontend Deployment (Netlify)
+```bash
+cd frontend
+npm run build
+```
+The built files will be in the `dist` folder, ready for deployment to Netlify:
+
+1. Push to GitHub
+2. Connect repository to Netlify
+3. Set build command: `npm run build`
+4. Set publish directory: `dist`
+5. Netlify automatically deploys on push
+
+### Backend Deployment (Render)
+1. Push to GitHub
+2. Connect repository to Render
+3. Create new Web Service
+4. Set build command: `npm install`
+5. Set start command: `npm start`
+6. Add environment variables in Render dashboard:
+   - All variables from `.env` (MONGO_URI, JWT_SECRET, etc.)
+   - **Important**: Brevo email credentials (EMAIL_USER, EMAIL_PASS)
+7. Render automatically deploys on push
+
+### Environment Variables Required on Deployment Platform
+
+**Backend (Render):**
+```
+PORT=3000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+EMAIL_USER=your_brevo_sender_email@example.com
+EMAIL_PASS=your_brevo_smtp_api_key
+```
+
+**Frontend (Netlify):**
+```
+VITE_API_URL=https://snapcart-clj3.onrender.com/api
+```
+
+### Frontend Deployment (Alternative)
 ```bash
 cd frontend
 npm run build
 ```
 The built files will be in the `dist` folder, ready for deployment to platforms like Vercel, Netlify, or any static hosting service.
-
-### Backend Deployment
-The backend can be deployed to platforms like:
-- Heroku
-- Railway
-- DigitalOcean
-- AWS
-
-Make sure to set up environment variables on your deployment platform.
 
 ## 🤝 Contributing
 
