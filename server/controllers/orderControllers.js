@@ -1,8 +1,16 @@
 import Order from "../models/orderModel.js";
+import Product from "../models/productModel.js";
+import { sendOrderConfirmationEmail } from "../utils/email.js";
 
 export const addOrderItems = async (req, res) => {
   try {
-    const { products, shippingAddress, totalPrice } = req.body;
+    const {
+      products,
+      shippingAddress,
+      totalPrice,
+      paymentMethod,
+      transactionId,
+    } = req.body;
 
     // Validate required fields
     if (!products || products.length === 0) {
@@ -22,6 +30,29 @@ export const addOrderItems = async (req, res) => {
     if (!totalPrice || totalPrice <= 0) {
       return res.status(400).json({ message: "Invalid total price" });
     }
+    if (!paymentMethod || !transactionId) {
+      return res.status(400).json({ message: "Payment method and transaction ID are required" });
+    }
+
+    // Check stock availability
+    for (const item of products) {
+      const product = await Product.findById(item.productId);
+      if (!product) {
+        return res.status(404).json({ message: `Product ${item.productId} not found` });
+      }
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ message: `Insufficient stock for ${product.name}. Available: ${product.stock}` });
+      }
+    }
+
+    // Reduce stock
+    for (const item of products) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: -item.quantity }
+      });
+    }
+
+    const expectedDelivery = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
     // Create new order
     const order = new Order({
@@ -29,15 +60,43 @@ export const addOrderItems = async (req, res) => {
       products,
       shippingAddress,
       totalPrice,
+      paymentInfo: {
+        method: paymentMethod,
+        transactionId,
+        paidAt: new Date(),
+        amountPaid: totalPrice,
+      },
+      expectedDelivery,
       status: "Pending",
       orderDate: new Date(),
     });
 
-    if (!order){
-      console.log("Cannot create Order")
-    }
-
     const createdOrder = await order.save();
+
+    try {
+      const productDetails = await Promise.all(
+        products.map(async (item) => {
+          const product = await Product.findById(item.productId);
+          return {
+            name: product?.name || "Unknown product",
+            image: product?.image || "",
+            description: product?.description || "",
+            price: product?.price || 0,
+            quantity: item.quantity,
+          };
+        })
+      );
+
+      await sendOrderConfirmationEmail(
+        req.user.email,
+        req.user.name,
+        createdOrder,
+        productDetails,
+        expectedDelivery
+      );
+    } catch (emailError) {
+      console.error("Failed to send order confirmation email:", emailError);
+    }
 
     res.status(201).json(createdOrder);
   } catch (error) {

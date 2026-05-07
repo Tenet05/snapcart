@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import API from "../../api";
+import toast from "react-hot-toast";
 
 function ProductList({ category }) {
   const { searchTerm } = useContext(SearchContext);
@@ -84,6 +85,33 @@ function ProductList({ category }) {
     console.log("Toggle wishlist:", product);
   };
 
+  const addToCart = (product) => {
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existingItem = storedCart.find((item) => item._id === product._id);
+
+    if (existingItem) {
+      if (existingItem.quantity >= product.stock) {
+        toast.error("Cannot add more of this product. Stock limit reached.");
+        return;
+      }
+      // Add 1 more, but cap at stock
+      const newQuantity = Math.min(existingItem.quantity + 1, product.stock);
+      const updatedCart = storedCart.map((item) =>
+        item._id === product._id ? { ...item, quantity: newQuantity } : item
+      );
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      toast.success("Item added to cart");
+    } else {
+      if (product.stock < 1) {
+        toast.error("Product out of stock");
+        return;
+      }
+      const updatedCart = [...storedCart, { ...product, quantity: 1 }];
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      toast.success("Item added to cart");
+    }
+  };
+
   if (error) {
     return (
       <div className="text-center py-12">
@@ -105,7 +133,7 @@ function ProductList({ category }) {
   }
 
   return (
-    <div className="space-y-6 m-10">
+    <div className="space-y-6 m-4 md:m-10">
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex flex-col justify-center">
@@ -217,7 +245,7 @@ function ProductList({ category }) {
           {filteredProducts.map((product) => (
             <div
               key={product._id}
-              className={`bg-white shadow-lg rounded-2xl overflow-hidden p-8 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group ${
+              className={`bg-white shadow-lg rounded-2xl overflow-hidden p-4 md:p-8 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group ${
                 viewMode === "list" ? "flex items-center" : "flex flex-col"
               }`}
             >
@@ -231,7 +259,7 @@ function ProductList({ category }) {
                   src={product.image}
                   alt={product.name}
                   className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
-                    viewMode === "grid" ? "p-4" : "p-2"
+                    viewMode === "grid" ? "p-2 md:p-4" : "p-2"
                   }`}
                 />
 
@@ -289,7 +317,7 @@ function ProductList({ category }) {
 
               {/* Product Details */}
               <div
-                className={`p-6 flex-1 ${
+                className={`p-4 md:p-6 flex-1 ${
                   viewMode === "list"
                     ? "flex items-center justify-between"
                     : "flex flex-col"

@@ -13,6 +13,14 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const getCurrentCartQuantity = () => {
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existingItem = storedCart.find((item) => item._id === product?._id);
+    return existingItem ? existingItem.quantity : 0;
+  };
+
+  const availableStock = product ? product.stock - getCurrentCartQuantity() : 0;
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -33,7 +41,7 @@ export default function ProductDetails() {
   const handleQuantityChange = (e) => {
     let value = Number(e.target.value);
     if (value < 1) value = 1;
-    if (product?.stock && value > product.stock) value = product.stock;
+    if (availableStock && value > availableStock) value = availableStock;
     setQuantity(value);
   };
 
@@ -89,7 +97,7 @@ export default function ProductDetails() {
           <p className="text-xl font-semibold">₹{product.price}</p>
           <p className="text-gray-700">{product.description}</p>
           <p className="text-sm text-gray-500">
-            Only {product.stock} left, hurry up!
+            Only {availableStock} left in stock, hurry up!
           </p>
 
           {/* Quantity Selector (hide for admin) */}
@@ -104,6 +112,9 @@ export default function ProductDetails() {
                 onChange={handleQuantityChange}
                 className="border rounded px-3 py-2 w-24"
               />
+              <p className="mt-2 text-sm text-gray-500">
+                Total price: ₹{(product.price * quantity).toFixed(2)}
+              </p>
             </div>
           )}
 
@@ -111,7 +122,7 @@ export default function ProductDetails() {
           {error && <div className="text-red-500">{error}</div>}
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             {user?.isAdmin ? (
               // Admin Controls
               <button
